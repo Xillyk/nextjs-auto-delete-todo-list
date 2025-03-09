@@ -1,101 +1,174 @@
-import Image from "next/image";
+"use client";
+
+import { useRef, useState } from "react";
+
+interface ICard {
+  type: "Fruit" | "Vegetable";
+  name: string;
+}
+const todoList: ICard[] = [
+  {
+    type: "Fruit",
+    name: "Apple",
+  },
+  {
+    type: "Vegetable",
+    name: "Broccoli",
+  },
+  {
+    type: "Vegetable",
+    name: "Mushroom",
+  },
+  {
+    type: "Fruit",
+    name: "Banana",
+  },
+  {
+    type: "Vegetable",
+    name: "Tomato",
+  },
+  {
+    type: "Fruit",
+    name: "Orange",
+  },
+  {
+    type: "Fruit",
+    name: "Mango",
+  },
+  {
+    type: "Fruit",
+    name: "Pineapple",
+  },
+  {
+    type: "Vegetable",
+    name: "Cucumber",
+  },
+  {
+    type: "Fruit",
+    name: "Watermelon",
+  },
+  {
+    type: "Vegetable",
+    name: "Carrot",
+  },
+];
 
 export default function Home() {
-  return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-8 row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-semibold">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li>Save and see your changes instantly.</li>
-        </ol>
+  const [allList, setAllList] = useState<ICard[]>(todoList);
+  const [fruitList, setFruitList] = useState<ICard[]>([]);
+  const [vegetableList, setVegetableList] = useState<ICard[]>([]);
+  const timeoutMapRef = useRef<Map<string, NodeJS.Timeout>>(new Map());
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:min-w-44"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+  const handleClickCard = (card: ICard) => {
+    switch (card.type) {
+      case "Fruit":
+        setAllList((prev) => prev.filter((item) => item.name !== card.name));
+        setFruitList((prev) => [...prev, card]);
+        break;
+      case "Vegetable":
+        setAllList((prev) => prev.filter((item) => item.name !== card.name));
+        setVegetableList((prev) => [...prev, card]);
+        break;
+    }
+
+    // set back to allList after timeout
+    const timeoutId = setTimeout(() => {
+      setAllList((prev) => [...prev, card]);
+
+      switch (card.type) {
+        case "Fruit":
+          setFruitList((prev) =>
+            prev.filter((item) => item.name !== card.name)
+          );
+          break;
+        case "Vegetable":
+          setVegetableList((prev) =>
+            prev.filter((item) => item.name !== card.name)
+          );
+          break;
+      }
+      // auto delete timeout in map if countdown success
+      timeoutMapRef.current.delete(card.name);
+    }, 2000);
+    // set timeout by card in map
+    timeoutMapRef.current.set(card.name, timeoutId);
+  };
+
+  const handleClearTimeout = (card: ICard) => {
+    const timeoutId = timeoutMapRef.current.get(card.name);
+    if (timeoutId) {
+      clearTimeout(timeoutId); // Clear the timeout
+      timeoutMapRef.current.delete(card.name); // Remove from map
+
+      setAllList((prev) => [...prev, card]); // Return item to allList
+
+      switch (card.type) {
+        case "Fruit":
+          setFruitList((prev) =>
+            prev.filter((item) => item.name !== card.name)
+          );
+          break;
+        case "Vegetable":
+          setVegetableList((prev) =>
+            prev.filter((item) => item.name !== card.name)
+          );
+          break;
+      }
+    }
+  };
+
+  const CategoryList = ({
+    title,
+    list,
+    handleFunction,
+  }: {
+    title?: string;
+    list: ICard[];
+    handleFunction: (card: ICard) => void;
+  }) => {
+    return (
+      <div className={`${title && "border-gray-200 border-1"}`}>
+        <div className="flex flex-col gap-4">
+          {title && (
+            <div className="text-center bg-gray-100 py-2">
+              <span className="font-semibold">{title}</span>
+            </div>
+          )}
+
+          {list.map((card, index) => (
+            <div
+              key={index}
+              className="min-w-[300px] w-fit px-4 py-2 text-center border-gray-300 border-1 mx-2 hover:bg-gray-100 cursor-pointer shadow-sm duration-100"
+              onClick={() => handleFunction(card)}
+            >
+              {card.name}
+            </div>
+          ))}
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-6 flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+      </div>
+    );
+  };
+
+  return (
+    <div className="h-screen w-fit p-4">
+      <div className="grid grid-cols-3 gap-4">
+        {/* All list */}
+        <CategoryList list={allList} handleFunction={handleClickCard} />
+
+        {/* Fruits list */}
+        <CategoryList
+          title="Fruit"
+          list={fruitList}
+          handleFunction={handleClearTimeout}
+        />
+
+        {/* Vegetable list */}
+        <CategoryList
+          title="Vegetable"
+          list={vegetableList}
+          handleFunction={handleClearTimeout}
+        />
+      </div>
     </div>
   );
 }
