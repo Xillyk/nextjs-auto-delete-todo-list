@@ -53,6 +53,38 @@ const todoList: ICard[] = [
   },
 ];
 
+const CategoryList = ({
+  title,
+  list,
+  handleFunction,
+}: {
+  title?: string;
+  list: ICard[];
+  handleFunction: (card: ICard) => void;
+}) => {
+  return (
+    <div className={`${title && "border-gray-200 border-1"} h-full`}>
+      <div className="flex flex-col gap-4">
+        {title && (
+          <div className="text-center bg-gray-100 py-2">
+            <span className="font-semibold">{title}</span>
+          </div>
+        )}
+
+        {list.map((card, index) => (
+          <div
+            key={index}
+            className="min-w-[300px] w-fit px-4 py-2 text-center border-gray-300 border-1 mx-2 hover:bg-gray-100 cursor-pointer shadow-sm duration-100"
+            onClick={() => handleFunction(card)}
+          >
+            {card.name}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};
+
 export default function Home() {
   const [allList, setAllList] = useState<ICard[]>(todoList);
   const [fruitList, setFruitList] = useState<ICard[]>([]);
@@ -117,41 +149,9 @@ export default function Home() {
     }
   };
 
-  const CategoryList = ({
-    title,
-    list,
-    handleFunction,
-  }: {
-    title?: string;
-    list: ICard[];
-    handleFunction: (card: ICard) => void;
-  }) => {
-    return (
-      <div className={`${title && "border-gray-200 border-1"}`}>
-        <div className="flex flex-col gap-4">
-          {title && (
-            <div className="text-center bg-gray-100 py-2">
-              <span className="font-semibold">{title}</span>
-            </div>
-          )}
-
-          {list.map((card, index) => (
-            <div
-              key={index}
-              className="min-w-[300px] w-fit px-4 py-2 text-center border-gray-300 border-1 mx-2 hover:bg-gray-100 cursor-pointer shadow-sm duration-100"
-              onClick={() => handleFunction(card)}
-            >
-              {card.name}
-            </div>
-          ))}
-        </div>
-      </div>
-    );
-  };
-
   return (
     <div className="h-screen w-fit p-4">
-      <div className="grid grid-cols-3 gap-4">
+      <div className="grid grid-cols-3 gap-4 h-1/2">
         {/* All list */}
         <CategoryList list={allList} handleFunction={handleClickCard} />
 
