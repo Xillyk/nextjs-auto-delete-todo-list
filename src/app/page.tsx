@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useRef, useState, useTransition } from "react";
 
 interface ICard {
   type: "Fruit" | "Vegetable";
@@ -90,35 +90,39 @@ export default function Home() {
   const [fruitList, setFruitList] = useState<ICard[]>([]);
   const [vegetableList, setVegetableList] = useState<ICard[]>([]);
   const timeoutMapRef = useRef<Map<string, NodeJS.Timeout>>(new Map());
+  const [isPending, startTransition] = useTransition();
 
   const handleClickCard = (card: ICard) => {
-    switch (card.type) {
-      case "Fruit":
-        setAllList((prev) => prev.filter((item) => item.name !== card.name));
-        setFruitList((prev) => [...prev, card]);
-        break;
-      case "Vegetable":
-        setAllList((prev) => prev.filter((item) => item.name !== card.name));
-        setVegetableList((prev) => [...prev, card]);
-        break;
-    }
+    startTransition(() => {
+      setAllList((prev) => prev.filter((item) => item.name !== card.name));
+      switch (card.type) {
+        case "Fruit":
+          setFruitList((prev) => [...prev, card]);
+          break;
+        case "Vegetable":
+          setVegetableList((prev) => [...prev, card]);
+          break;
+      }
+    });
 
     // set back to allList after timeout
     const timeoutId = setTimeout(() => {
-      setAllList((prev) => [...prev, card]);
+      startTransition(() => {
+        setAllList((prev) => [...prev, card]);
 
-      switch (card.type) {
-        case "Fruit":
-          setFruitList((prev) =>
-            prev.filter((item) => item.name !== card.name)
-          );
-          break;
-        case "Vegetable":
-          setVegetableList((prev) =>
-            prev.filter((item) => item.name !== card.name)
-          );
-          break;
-      }
+        switch (card.type) {
+          case "Fruit":
+            setFruitList((prev) =>
+              prev.filter((item) => item.name !== card.name)
+            );
+            break;
+          case "Vegetable":
+            setVegetableList((prev) =>
+              prev.filter((item) => item.name !== card.name)
+            );
+            break;
+        }
+      });
       // auto delete timeout in map if countdown success
       timeoutMapRef.current.delete(card.name);
     }, 5000);
@@ -132,20 +136,21 @@ export default function Home() {
       clearTimeout(timeoutId); // Clear the timeout
       timeoutMapRef.current.delete(card.name); // Remove from map
 
-      setAllList((prev) => [...prev, card]); // Return item to allList
-
-      switch (card.type) {
-        case "Fruit":
-          setFruitList((prev) =>
-            prev.filter((item) => item.name !== card.name)
-          );
-          break;
-        case "Vegetable":
-          setVegetableList((prev) =>
-            prev.filter((item) => item.name !== card.name)
-          );
-          break;
-      }
+      startTransition(() => {
+        setAllList((prev) => [...prev, card]); // Return item to allList
+        switch (card.type) {
+          case "Fruit":
+            setFruitList((prev) =>
+              prev.filter((item) => item.name !== card.name)
+            );
+            break;
+          case "Vegetable":
+            setVegetableList((prev) =>
+              prev.filter((item) => item.name !== card.name)
+            );
+            break;
+        }
+      });
     }
   };
 
@@ -169,6 +174,9 @@ export default function Home() {
           handleFunction={handleClearTimeout}
         />
       </div>
+      {isPending && (
+        <div className="text-gray-300 text-center mt-4">Updating...</div>
+      )}
     </div>
   );
 }
