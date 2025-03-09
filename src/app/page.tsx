@@ -89,7 +89,7 @@ export default function Home() {
       }
       // auto delete timeout in map if countdown success
       timeoutMapRef.current.delete(card.name);
-    }, 2000);
+    }, 5000);
     // set timeout by card in map
     timeoutMapRef.current.set(card.name, timeoutId);
   };
